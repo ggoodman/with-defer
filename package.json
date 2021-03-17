@@ -1,0 +1,64 @@
+{
+  "name": "with-defer",
+  "version": "0.0.0",
+  "description": "Run a function with an injected go-like defer helper",
+  "keywords": [
+    "defer",
+    "go",
+    "golang",
+    "clean-up",
+    "dispose"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "files": [
+    "dist/**/!(tsconfig.tsbuildinfo)"
+  ],
+  "scripts": {
+    "docs": "typedoc --theme minimal ./src/index.ts",
+    "build": "rm -rf dist && rollup -c rollup.config.js",
+    "lint": "prettier --check src/**/*",
+    "prepack": "npm run lint && npm run build",
+    "test": "uvu -r esbuild-register",
+    "posttest": "kacl lint && npm run lint",
+    "preversion": "kacl prerelease",
+    "version": "npm run docs && kacl release && git add CHANGELOG.md",
+    "postversion": "git push && gh-release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ggoodman/with-defer.git"
+  },
+  "author": "Geoff Goodman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ggoodman/with-defer/issues"
+  },
+  "homepage": "https://github.com/ggoodman/with-defer#readme",
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 100
+  },
+  "devDependencies": {
+    "esbuild": "^0.9.2",
+    "esbuild-register": "^2.3.0",
+    "gh-release": "^5.0.0",
+    "kacl": "^1.1.1",
+    "prettier": "^2.2.1",
+    "rollup": "^2.41.4",
+    "rollup-plugin-dts": "^3.0.1",
+    "typedoc": "^0.20.32",
+    "typescript": "^4.2.3",
+    "uvu": "^0.5.1"
+  },
+  "exports": {
+    ".": {
+      "node": {
+        "require": "./dist/index.js",
+        "import": "./dist/index.esm.js"
+      },
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  }
+}
