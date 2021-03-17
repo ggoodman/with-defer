@@ -22,7 +22,7 @@
     "test": "uvu -r esbuild-register",
     "posttest": "kacl lint && npm run lint",
     "preversion": "kacl prerelease",
-    "version": "npm run docs && kacl release && git add CHANGELOG.md",
+    "version": "npm run docs && kacl release && git add docs CHANGELOG.md",
     "postversion": "git push && gh-release"
   },
   "repository": {

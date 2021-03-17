@@ -2714,6 +2714,60 @@ img {
 </nav>
 <div class="container container-main">
 	<div class="content-wrap">
+		<div class="tsd-panel tsd-typography">
+			<a href="#with-defer" id="with-defer" style="color: inherit; text-decoration: none;">
+				<h1>with-defer</h1>
+			</a>
+			<blockquote>
+				<p>Because once you&#39;ve tasted go&#39;s <code>defer</code>, you can&#39;t get enough.</p>
+			</blockquote>
+			<p>This library provides tools to help you clean up resources in a simple and intuitive way. As you create more than one resource that needs to be disposed in a single, complex flow, you find yourself fighting with deeply-nested <code>try / finally</code> blocks and a sense of dread. <em>&quot;What happened to the flattened logic that I was promised with <code>async / await</code>?&quot;</em>, you might ask. Fear not, we&#39;re here to help.</p>
+			<p>Using <code>runWithDefer</code> will allow you to colocate your instructions to free resources with their creation. Some real-world use-cases:</p>
+			<ul>
+				<li>In tests, instead of having shared <code>let</code> variables instantiated in <code>.before</code> handlers and cleaned up in <code>.after</code> handlers, wrap your test logic in <code>runWithDefer</code> and get better typing and cleaner logic.</li>
+				<li>In complex CLI workflows or build tool logic, this can help dispose of handles that might otherwise keep the event loop open, preventing your app from cleanly exiting.</li>
+				<li>Manage the closing of your server and database connections.</li>
+				<li>... we&#39;d love to hear what else you can dream up.</li>
+			</ul>
+			<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+				<h2>Installation</h2>
+			</a>
+			<pre><code class="language-sh"><span style="color: #000000">npm install with-defer</span>
+</code></pre>
+			<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+				<h2>Usage</h2>
+			</a>
+			<p>Below is a fictitious example that opens a file handle for reading, and writes the contents of that file to another file handle opened for writing. Notice that the instructions to close the file handles are adjacent to the code that opens them. This makes it easy to understand the intent of the code.</p>
+			<p>Deferred clean-up functions will be run in FIFO order. This means the last registered clean-up function will run first. If a clean-up function returns a <code>Promise</code>, it will be awaited. Any rejections or thrown exceptions in clean-up functions will NOT prevent others from running. If any clean-up functions throw, these errors will be accumulated and the whole <code>runWithDefer</code> function will return a rejected <code>Promise</code> whose value is an <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError"><code>AggregateError</code></a> of the thrown exceptions.</p>
+			<blockquote>
+				<p><em><strong>Note</strong>: Yes, I know that there are &#39;better&#39; ways to achieve the example below in Node.js. The point isn&#39;t so much writing one file&#39;s contents to another but how these file handles are cleaned up.</em></p>
+			</blockquote>
+			<pre><code class="language-js"><span style="color: #AF00DB">import</span><span style="color: #000000"> </span><span style="color: #0000FF">*</span><span style="color: #000000"> </span><span style="color: #AF00DB">as</span><span style="color: #000000"> </span><span style="color: #001080">Fs</span><span style="color: #000000"> </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;fs&#039;</span><span style="color: #000000">;</span>
+<span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">runWithDefer</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;with-defer&#039;</span><span style="color: #000000">;</span>
+
+<span style="color: #0000FF">async</span><span style="color: #000000"> </span><span style="color: #0000FF">function</span><span style="color: #000000"> </span><span style="color: #795E26">main</span><span style="color: #000000">() {</span>
+<span style="color: #000000">  </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #795E26">runWithDefer</span><span style="color: #000000">(</span><span style="color: #0000FF">async</span><span style="color: #000000"> (</span><span style="color: #001080">defer</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #008000">// Open a file hande and make sure we close it.</span>
+<span style="color: #000000">    </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">handle1</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">Fs</span><span style="color: #000000">.</span><span style="color: #001080">promises</span><span style="color: #000000">.</span><span style="color: #795E26">open</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;path/to/file&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;r+&#039;</span><span style="color: #000000">);</span>
+<span style="color: #000000">    </span><span style="color: #795E26">defer</span><span style="color: #000000">(() </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> </span><span style="color: #001080">handle1</span><span style="color: #000000">.</span><span style="color: #795E26">close</span><span style="color: #000000">());</span>
+
+<span style="color: #000000">    </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">content</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">handle1</span><span style="color: #000000">.</span><span style="color: #795E26">readFile</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;utf8&#039;</span><span style="color: #000000">);</span>
+
+<span style="color: #000000">    </span><span style="color: #008000">// We open a 2nd handle here and register its close function. Notice we don&#039;t have to deal</span>
+<span style="color: #000000">    </span><span style="color: #008000">// with crazy nesting of try / catch blocks and can co-locate clean-up with obtaining the</span>
+<span style="color: #000000">    </span><span style="color: #008000">// resource.</span>
+<span style="color: #000000">    </span><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">handle2</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">Fs</span><span style="color: #000000">.</span><span style="color: #001080">promises</span><span style="color: #000000">.</span><span style="color: #795E26">open</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;path/to/file2&#039;</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;w+&#039;</span><span style="color: #000000">);</span>
+<span style="color: #000000">    </span><span style="color: #795E26">defer</span><span style="color: #000000">(() </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> </span><span style="color: #001080">handle2</span><span style="color: #000000">.</span><span style="color: #795E26">close</span><span style="color: #000000">());</span>
+
+<span style="color: #000000">    </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">handle2</span><span style="color: #000000">.</span><span style="color: #795E26">writeFile</span><span style="color: #000000">(</span><span style="color: #001080">content</span><span style="color: #000000">);</span>
+<span style="color: #000000">  });</span>
+<span style="color: #000000">}</span>
+</code></pre>
+			<a href="#docs" id="docs" style="color: inherit; text-decoration: none;">
+				<h2>Docs</h2>
+			</a>
+			<p>Read the <a href="https://ggoodman.github.io/with-defer/">API Documentation</a> online.</p>
+		</div>
 		<section class="tsd-panel-group tsd-index-group">
 			<h2>Index</h2>
 			<section class="tsd-panel tsd-index-panel">
@@ -2745,7 +2799,7 @@ img {
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in src/cleanup.ts:72</li>
+								<li>Defined in <a href="https://github.com/ggoodman/with-defer/blob/c2b732d/src/cleanup.ts#L72">src/cleanup.ts:72</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
