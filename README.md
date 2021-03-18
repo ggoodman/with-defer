@@ -31,7 +31,7 @@ import { runWithDefer } from 'with-defer';
 
 async function main() {
   await runWithDefer(async (defer) => {
-    // Open a file hande and make sure we close it.
+    // Open a file handle and make sure we close it.
     const handle1 = await Fs.promises.open('path/to/file', 'r+');
     defer(() => handle1.close());
 
